@@ -1,0 +1,108 @@
+@model Uis.Server.Models.Payment
+
+@{
+    ViewData["Title"] = $"تفاصيل العملية {Model.TransactionId}";
+    var escrow = ViewBag.Escrow as Uis.Server.Models.Escrow;
+}
+
+<div class="mb-6">
+    <a href="/Admin/Payments" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center transition-all">
+        <i class="fas fa-arrow-right ml-2"></i> العودة لسجل المدفوعات
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Payment Receipt Card -->
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+            <div class="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800">إيصال دفع رقمي</h2>
+                    <p class="text-gray-400 text-xs mt-1">معرف المعاملة: @Model.TransactionId</p>
+                </div>
+                <div class="text-left">
+                    <span class="bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-xs font-black border border-green-200">
+                        @Model.Status
+                    </span>
+                </div>
+            </div>
+
+            <div class="p-8 space-y-8">
+                <!-- Service Info -->
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">الخدمة المطلوبة</p>
+                        <h4 class="font-black text-gray-800">@Model.Order.Service.Title</h4>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">المبلغ الإجمالي</p>
+                        <h4 class="text-2xl font-black text-indigo-600">@Model.Amount.ToString("N2") ج.م</h4>
+                    </div>
+                </div>
+
+                <!-- Parties Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-gray-50">
+                    <div class="flex items-center">
+                        <img src="https://ui-avatars.com/api/?name=@Model.Order.Student.FullName&background=random" class="w-12 h-12 rounded-xl shadow-sm">
+                        <div class="mr-4">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase">الدافع (الطالب)</p>
+                            <p class="font-bold text-gray-800">@Model.Order.Student.FullName</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center md:justify-end">
+                         <div class="ml-4 text-left">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase">تاريخ العملية</p>
+                            <p class="font-bold text-gray-800">@Model.Order.CreatedAt.ToString("f")</p>
+                        </div>
+                        <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400"><i class="fas fa-calendar-alt"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-indigo-600 p-8 text-white flex justify-between items-center">
+                <div class="flex items-center">
+                    <i class="fas fa-shield-alt text-3xl text-indigo-200 ml-4"></i>
+                    <div>
+                        <h4 class="font-bold">نظام الضمان النشط</h4>
+                        <p class="text-[10px] opacity-70 tracking-wide">المبلغ محمي بالكامل في حساب الضمان التابع لـ UIS</p>
+                    </div>
+                </div>
+                @if(escrow != null)
+                {
+                    <div class="text-left">
+                        <p class="text-[10px] uppercase opacity-70 font-bold">حالة الضمان</p>
+                        <p class="text-lg font-black">@escrow.Status</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Actions -->
+    <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h4 class="font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-cogs ml-2 text-indigo-500"></i> إجراءات سريعة
+            </h4>
+            <div class="space-y-3">
+                <a href="/Admin/Orders/@Model.OrderId" class="block w-full text-center bg-gray-100 text-gray-700 py-3 rounded-xl text-xs font-black hover:bg-gray-200 transition-all">
+                    عرض الطلب المرتبط
+                </a>
+                <a href="/Admin/Users/@Model.Order.StudentId" class="block w-full text-center bg-gray-100 text-gray-700 py-3 rounded-xl text-xs font-black hover:bg-gray-200 transition-all">
+                    عرض ملف العميل
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h4 class="font-bold text-gray-800 mb-4">بوابة الدفع</h4>
+            <div class="flex items-center p-3 bg-gray-50 rounded-xl">
+                <i class="fab fa-cc-visa text-2xl text-blue-800 ml-3"></i>
+                <div>
+                    <p class="text-xs font-bold text-gray-700">Paymob / Visa</p>
+                    <p class="text-[10px] text-gray-400">معالجة عبر بطاقة بنكية</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

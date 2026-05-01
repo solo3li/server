@@ -1,0 +1,278 @@
+@model Uis.Server.Models.Ticket
+
+@{
+    ViewData["Title"] = $"تذكرة رقم #{Model.Id.ToString().Substring(0, 8)}";
+}
+
+<div class="mb-6">
+    <a href="/Admin/Tickets" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center transition-all">
+        <i class="fas fa-arrow-right ml-2"></i> العودة لقائمة التذاكر
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-220px)]">
+    <!-- Chat Area -->
+    <div class="lg:col-span-2 flex flex-col bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <!-- Chat Header -->
+        <div class="p-6 border-b border-gray-100 bg-white flex justify-between items-center z-10 shadow-sm">
+            <div>
+                <h3 class="text-lg font-bold text-gray-800">@Model.Subject</h3>
+                <div class="flex items-center mt-1">
+                    <span class="w-2 h-2 rounded-full @(Model.Status == "Open" ? "bg-green-500" : "bg-gray-400") ml-2"></span>
+                    <p class="text-xs text-gray-500">الحالة: @(Model.Status == "Open" ? "نشطة" : "مغلقة")</p>
+                </div>
+            </div>
+            @if(Model.Status == "Open")
+            {
+                <form asp-action="CloseTicket" asp-route-id="@Model.Id" method="post">
+                    <button type="submit" class="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white border border-red-100 px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center">
+                        <i class="fas fa-lock ml-2"></i> إغلاق وحل النزاع
+                    </button>
+                </form>
+            }
+        </div>
+
+        <!-- Messages List -->
+        <div id="messagesContainer" class="flex-1 overflow-y-auto p-6 space-y-6 bg-[#f0f2f5]">
+            @foreach (var msg in Model.Messages)
+            {
+                var isAdmin = msg.Sender.Email == "admin@uis.com";
+                <div id="msg-@msg.Id" class="flex @(isAdmin ? "justify-start" : "justify-end") message-item">
+                    <div class="max-w-[75%] @(isAdmin ? "bg-indigo-600 text-white rounded-2xl rounded-tr-none shadow-indigo-200" : "bg-white text-gray-800 rounded-2xl rounded-tl-none border border-gray-100") p-4 shadow-md">
+                        <div class="flex items-center mb-2">
+                            <span class="text-[10px] font-black uppercase tracking-widest @(isAdmin ? "text-indigo-200" : "text-indigo-600")">
+                                @(isAdmin ? "الدعم الفني" : msg.Sender.FullName)
+                            </span>
+                            <span class="mx-2 text-[10px] opacity-40">•</span>
+                            <span class="text-[10px] opacity-60">@msg.SentAt.ToLocalTime().ToString("HH:mm")</span>
+                        </div>
+                        <p class="text-sm leading-relaxed font-medium">@msg.Content</p>
+                        @if (!string.IsNullOrEmpty(msg.AttachmentUrl))
+                        {
+                            <div class="mt-3">
+                                @if(msg.AttachmentType == "image") {
+                                    <a href="@msg.AttachmentUrl" target="_blank"><img src="@msg.AttachmentUrl" class="max-w-full rounded-lg max-h-40" /></a>
+                                } else if(msg.AttachmentType == "voice") {
+                                    <audio controls src="@msg.AttachmentUrl" class="w-full max-w-[200px] mt-2"></audio>
+                                } else {
+                                    <a href="@msg.AttachmentUrl" target="_blank" class="flex items-center p-2 bg-black/10 rounded-lg text-xs font-bold hover:bg-black/20 w-fit">
+                                        <i class="fas fa-file-download ml-2"></i> تحميل المرفق
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Reply Input -->
+        @if(Model.Status == "Open")
+        {
+            <div class="p-6 border-t border-gray-100 bg-white">
+                <div class="flex space-x-4 rtl:space-x-reverse items-end">
+                    <label class="cursor-pointer text-gray-500 hover:text-indigo-600 transition-colors p-4 bg-gray-50 rounded-2xl flex items-center justify-center">
+                        <i class="fas fa-paperclip text-xl"></i>
+                        <input type="file" id="replyFile" class="hidden" accept="image/*,audio/*,.pdf,.doc,.docx" />
+                    </label>
+                    <textarea id="replyContent" 
+                              class="flex-1 bg-gray-50 border border-gray-200 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all resize-none" 
+                              rows="2" placeholder="اكتب ردك المهني هنا..."></textarea>
+                    <button type="button" onclick="sendReply()" id="sendBtn"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50">
+                        <i class="fas fa-paper-plane text-xl rotate-180"></i>
+                    </button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="p-6 bg-gray-50 text-center border-t border-gray-100">
+                <p class="text-sm text-gray-500 font-bold"><i class="fas fa-info-circle ml-2"></i>هذه التذكرة مغلقة. لا يمكن إرسال المزيد من الردود.</p>
+            </div>
+        }
+    </div>
+
+    <!-- Ticket Sidebar -->
+    <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h4 class="font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-user-circle ml-2 text-indigo-500"></i> بيانات صاحب التذكرة
+            </h4>
+            <div class="text-center mb-6">
+                <img src="https://ui-avatars.com/api/?name=@Model.User.FullName&size=128&background=random" class="w-20 h-20 rounded-full mx-auto border-4 border-indigo-50 shadow-sm">
+                <h5 class="mt-3 font-bold text-gray-800">@Model.User.FullName</h5>
+                <p class="text-xs text-gray-400">@Model.User.Email</p>
+            </div>
+            <div class="space-y-4 pt-4 border-t border-gray-50">
+                <div class="flex justify-between">
+                    <span class="text-xs text-gray-500 font-bold">تاريخ الانضمام</span>
+                    <span class="text-xs text-gray-800">@Model.User.CreatedAt.ToString("yyyy-MM-dd")</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-xs text-gray-500 font-bold">الحساب</span>
+                    <span class="text-xs text-green-600 font-bold">نشط</span>
+                </div>
+            </div>
+        </div>
+
+        @if(Model.OrderId.HasValue && Model.Status == "Open")
+        {
+            <div class="bg-white rounded-2xl shadow-sm border-2 border-orange-100 p-6">
+                <h4 class="font-bold text-orange-800 mb-4 flex items-center">
+                    <i class="fas fa-gavel ml-2"></i> التحكيم في النزاع
+                </h4>
+                <p class="text-xs text-orange-600 mb-6 leading-relaxed">بصفتك مديراً، يمكنك حل النزاع عبر التحكم في حالة المبلغ المجمّد (Escrow).</p>
+                <div class="space-y-3">
+                    <form asp-action="ResolveDispute" method="post">
+                        <input type="hidden" name="ticketId" value="@Model.Id" />
+                        <input type="hidden" name="action" value="refund" />
+                        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-md">
+                            إرجاع المبلغ للطالب
+                        </button>
+                    </form>
+                    <form asp-action="ResolveDispute" method="post">
+                        <input type="hidden" name="ticketId" value="@Model.Id" />
+                        <input type="hidden" name="action" value="release" />
+                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-md">
+                            تحويل المبلغ للمنفذ
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+
+        @if(Model.OrderId.HasValue)
+        {
+            <div class="bg-indigo-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+                <i class="fas fa-shopping-basket absolute -right-4 -bottom-4 text-8xl text-white/10 -rotate-12"></i>
+                <h4 class="font-bold mb-4 flex items-center relative z-10">
+                    <i class="fas fa-link ml-2 text-indigo-300"></i> الطلب المرتبط
+                </h4>
+                <p class="text-xs text-indigo-200 mb-4 relative z-10">هذه التذكرة مرتبطة بطلب الخدمة رقم #@Model.OrderId.Value.ToString().Substring(0,8)</p>
+                <a href="/Admin/Orders?search=@Model.OrderId" class="relative z-10 block text-center bg-white/10 hover:bg-white/20 border border-white/20 py-2 rounded-xl text-xs font-bold transition-all">
+                    عرض تفاصيل الطلب
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const container = document.getElementById('messagesContainer');
+        container.scrollTop = container.scrollHeight;
+
+        // SignalR Setup - USING EXPLICIT HUB PATH
+        const hubUrl = window.location.origin + "/hubs/chat";
+        console.log("Connecting to hub:", hubUrl);
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl(hubUrl)
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("ReceiveTicketMessage", function (data) {
+            if (document.getElementById('msg-' + data.id)) return;
+            appendMessage(data);
+        });
+
+        connection.start().then(function () {
+            console.log("SignalR Connected!");
+            connection.invoke("JoinChat", "ticket-@Model.Id").catch(function (err) {
+                return console.error(err.toString());
+            });
+        }).catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        async function sendReply() {
+            const content = document.getElementById('replyContent').value;
+            const fileInput = document.getElementById('replyFile');
+            const file = fileInput ? fileInput.files[0] : null;
+
+            if (!content.trim() && !file) return;
+
+            const btn = document.getElementById('sendBtn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin text-xl"></i>';
+
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                
+                const formData = new FormData();
+                formData.append('TicketId', '@Model.Id');
+                if (content.trim()) formData.append('Content', content);
+                if (file) {
+                    formData.append('Attachment', file);
+                    let type = "file";
+                    if(file.type.startsWith("image/")) type = "image";
+                    else if(file.type.startsWith("audio/")) type = "voice";
+                    formData.append('AttachmentType', type);
+                }
+
+                const response = await fetch('/Admin/Tickets/ReplyApi', {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': token },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Server error');
+
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('replyContent').value = '';
+                    document.getElementById('replyFile').value = '';
+                }
+            } catch (err) {
+                console.error('Chat Error:', err);
+                alert('فشل في إرسال الرد: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        function appendMessage(data) {
+            const isAdmin = data.senderId === "@ViewBag.AdminId";
+            let attachmentHtml = '';
+            if (data.attachmentUrl) {
+                attachmentHtml = '<div class="mt-3">';
+                if(data.attachmentType === 'image') {
+                    attachmentHtml += `<a href="${data.attachmentUrl}" target="_blank"><img src="${data.attachmentUrl}" class="max-w-full rounded-lg max-h-40" /></a>`;
+                } else if(data.attachmentType === 'voice') {
+                    attachmentHtml += `<audio controls src="${data.attachmentUrl}" class="w-full max-w-[200px] mt-2"></audio>`;
+                } else {
+                    attachmentHtml += `<a href="${data.attachmentUrl}" target="_blank" class="flex items-center p-2 bg-black/10 rounded-lg text-xs font-bold hover:bg-black/20 w-fit"><i class="fas fa-file-download ml-2"></i> تحميل المرفق</a>`;
+                }
+                attachmentHtml += '</div>';
+            }
+
+            const time = new Date(data.sentAt).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
+
+            const html = `
+                <div id="msg-${data.id}" class="flex ${isAdmin ? 'justify-start' : 'justify-end'} animate-fade-in">
+                    <div class="max-w-[75%] ${isAdmin ? 'bg-indigo-600 text-white rounded-2xl rounded-tr-none shadow-indigo-200' : 'bg-white text-gray-800 rounded-2xl rounded-tl-none border border-gray-100'} p-4 shadow-md">
+                        <div class="flex items-center mb-2">
+                            <span class="text-[10px] font-black uppercase tracking-widest ${isAdmin ? 'text-indigo-200' : 'text-indigo-600'}">
+                                ${isAdmin ? 'الدعم الفني' : data.senderName}
+                            </span>
+                            <span class="mx-2 text-[10px] opacity-40">•</span>
+                            <span class="text-[10px] opacity-60">${time}</span>
+                        </div>
+                        <p class="text-sm leading-relaxed font-medium">${data.content}</p>
+                        ${attachmentHtml}
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
+    @Html.AntiForgeryToken()
+    <style>
+        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+        @@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+}

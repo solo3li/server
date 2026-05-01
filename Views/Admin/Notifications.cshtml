@@ -1,0 +1,158 @@
+@model IEnumerable<Uis.Server.Models.Notification>
+
+@{
+    ViewData["Title"] = "مركز التنبيهات";
+    var users = ViewBag.Users as IEnumerable<Uis.Server.Models.User>;
+}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Send Notification Form -->
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-paper-plane ml-2 text-indigo-600"></i>
+                إرسال تنبيه جديد
+            </h3>
+            
+            <form asp-action="SendNotification" method="post" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">المستلم</label>
+                    <div class="flex items-center space-x-4 rtl:space-x-reverse mb-2">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="allUsers" value="false" checked onchange="toggleUserSelect(false)" class="form-radio text-indigo-600">
+                            <span class="mr-2 text-xs font-bold">مستخدم معين</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="allUsers" value="true" onchange="toggleUserSelect(true)" class="form-radio text-indigo-600">
+                            <span class="mr-2 text-xs font-bold">الكل</span>
+                        </label>
+                    </div>
+                    
+                    <select id="userSelect" name="userId" class="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium">
+                        <option value="">اختر المستخدم...</option>
+                        @foreach (var user in users ?? Enumerable.Empty<Uis.Server.Models.User>())
+                        {
+                            <option value="@user.Id">@user.FullName (@user.Email)</option>
+                        }
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">نص الرسالة</label>
+                    <textarea name="message" rows="4" required placeholder="اكتب محتوى التنبيه هنا..."
+                              class="w-full px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md flex items-center justify-center">
+                    <i class="fas fa-bell ml-2"></i>
+                    إرسال التنبيه
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center bg-gray-50/50 gap-4">
+                <h3 class="text-xl font-bold text-gray-800">آخر التنبيهات المرسلة</h3>
+                
+                <form method="get" class="flex flex-wrap items-center gap-3 rtl:space-x-reverse">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" name="search" value="@ViewBag.Search" placeholder="بحث في الرسائل..." 
+                               class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none w-48">
+                    </div>
+                    
+                    <select name="userId" class="px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
+                        <option value="">كل المستخدمين</option>
+                        @foreach (var user in users ?? Enumerable.Empty<Uis.Server.Models.User>())
+                        {
+                            <option value="@user.Id" selected="@(ViewBag.UserId?.ToString() == user.Id.ToString())">@user.FullName</option>
+                        }
+                    </select>
+
+                    <input type="date" name="date" value="@ViewBag.Date"
+                           class="px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
+
+                    <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all shadow-md">تصفية</button>
+                    
+                    @if(!string.IsNullOrEmpty(ViewBag.Search) || ViewBag.UserId != null || !string.IsNullOrEmpty(ViewBag.Date))
+                    {
+                        <a href="/Admin/Notifications" class="text-red-500 text-xs font-bold hover:underline">إلغاء</a>
+                    }
+                </form>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-right text-sm">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold text-xs">
+                            <th class="p-4">المستخدم</th>
+                            <th class="p-4">الرسالة</th>
+                            <th class="p-4">الحالة</th>
+                            <th class="p-4">التاريخ</th>
+                            <th class="p-4">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach (var n in Model)
+                        {
+                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                <td class="p-4">
+                                    <div class="font-bold text-gray-800">@n.User.FullName</div>
+                                    <div class="text-[10px] text-gray-400">@n.User.Email</div>
+                                </td>
+                                <td class="p-4 text-gray-600 max-w-[300px] truncate">@n.Message</td>
+                                <td class="p-4">
+                                    @if (n.IsRead)
+                                    {
+                                        <span class="text-green-600 text-xs font-bold flex items-center">
+                                            <i class="fas fa-check-double ml-1"></i> مقروء
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-400 text-xs font-bold flex items-center">
+                                            <i class="fas fa-check ml-1"></i> مرسل
+                                        </span>
+                                    }
+                                </td>
+                                <td class="p-4 text-gray-500 text-xs font-medium">@n.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td class="p-4">
+                                    <form asp-action="DeleteNotification" asp-route-id="@n.Id" method="post" onsubmit="return confirm('هل أنت متأكد من الحذف؟')">
+                                        <button type="submit" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            
+            @if (!Model.Any())
+            {
+                <div class="p-12 text-center text-gray-400">
+                    <i class="fas fa-bell-slash text-4xl mb-4"></i>
+                    <p class="font-bold">لا توجد تنبيهات مرسلة حتى الآن</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleUserSelect(isAll) {
+        const select = document.getElementById('userSelect');
+        select.disabled = isAll;
+        if (isAll) {
+            select.classList.add('bg-gray-50', 'text-gray-400');
+            select.required = false;
+        } else {
+            select.classList.remove('bg-gray-50', 'text-gray-400');
+            select.required = true;
+        }
+    }
+</script>

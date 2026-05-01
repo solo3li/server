@@ -1,0 +1,113 @@
+@model IEnumerable<Uis.Server.Models.Category>
+
+@{
+    ViewData["Title"] = "إدارة التصنيفات";
+}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Add Category Form -->
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 sticky top-6">
+            <h3 class="text-xl font-black text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-folder-plus ml-2 text-indigo-500"></i> تصنيف جديد
+            </h3>
+            <form asp-action="CreateCategory" method="post" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">اسم التصنيف</label>
+                    <input type="text" name="name" required 
+                           class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all bg-gray-50"
+                           placeholder="مثال: برمجة تطبيقات...">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl transition-all shadow-lg hover:scale-[1.02] active:scale-95">
+                    <i class="fas fa-save ml-2"></i>حفظ التصنيف
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Categories List -->
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center bg-gray-50/50 gap-4">
+                <h3 class="text-lg font-bold text-gray-800">التصنيفات المتاحة</h3>
+                
+                <form method="get" class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" name="search" value="@ViewBag.Search" placeholder="بحث باسم التصنيف..." 
+                           class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none w-full md:w-64">
+                </form>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-right">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-100 text-gray-400 font-bold text-[10px] uppercase tracking-widest">
+                            <th class="p-4">اسم التصنيف</th>
+                            <th class="p-4 text-center">الإجراءات والربط</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-sm">
+                        @foreach (var cat in Model)
+                        {
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="p-4 font-bold text-gray-800">@cat.Name</td>
+                                <td class="p-4">
+                                    <div class="flex justify-center space-x-3 rtl:space-x-reverse">
+                                        <!-- Link to Filtered Services -->
+                                        <a asp-action="Services" asp-route-categoryId="@cat.Id" 
+                                           class="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-xl text-xs font-black hover:bg-indigo-600 hover:text-white transition-all shadow-sm flex items-center">
+                                            <i class="fas fa-list-ul ml-1.5"></i> الخدمات
+                                        </a>
+
+                                        <button onclick="editCategory('@cat.Id', '@cat.Name')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-xl transition-all">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+
+                                        <form asp-action="DeleteCategory" asp-route-id="@cat.Id" method="post" onsubmit="return confirm('هل أنت متأكد؟ سيتم فصل الخدمات المرتبطة بهذا التصنيف.')">
+                                            <button type="submit" class="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-xl transition-all">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div id="editModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl scale-95 transition-all">
+        <h3 class="text-xl font-black text-gray-800 mb-6 flex items-center">
+            <i class="fas fa-edit ml-2 text-blue-500"></i> تعديل التصنيف
+        </h3>
+        <form asp-action="EditCategory" method="post" class="space-y-6">
+            <input type="hidden" name="id" id="editId">
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">الاسم الجديد</label>
+                <input type="text" name="name" id="editName" required 
+                       class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all bg-gray-50">
+            </div>
+            <div class="flex gap-4 mt-8">
+                <button type="button" onclick="closeModal()" class="flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-2xl">إلغاء</button>
+                <button type="submit" class="flex-1 bg-indigo-600 text-white font-black py-3 rounded-2xl shadow-lg">حفظ التغييرات</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function editCategory(id, name) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editName').value = name;
+        document.getElementById('editModal').classList.remove('hidden');
+        document.getElementById('editModal').classList.add('flex');
+    }
+    function closeModal() {
+        document.getElementById('editModal').classList.add('hidden');
+        document.getElementById('editModal').classList.remove('flex');
+    }
+</script>

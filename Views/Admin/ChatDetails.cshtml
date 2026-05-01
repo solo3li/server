@@ -1,0 +1,115 @@
+@model Uis.Server.Models.Chat
+
+@{
+    ViewData["Title"] = "تفاصيل المحادثة";
+    var user1 = Model.Order?.Student ?? Model.Student;
+    var user2 = Model.Order?.Executor ?? Model.Executor;
+}
+
+<div class="mb-6 flex items-center justify-between">
+    <a href="/Admin/Chats" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center transition-all">
+        <i class="fas fa-arrow-right ml-2"></i> العودة لقائمة المحادثات
+    </a>
+    @if(Model.OrderId.HasValue)
+    {
+        <a href="/Admin/Orders/@Model.OrderId" class="bg-indigo-900 text-white px-4 py-2 rounded-xl text-xs font-black shadow-lg">
+            <i class="fas fa-shopping-basket ml-1"></i> عرض الطلب المرتبط
+        </a>
+    }
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-8 h-[calc(100vh-200px)]">
+    <!-- Chat Info Sidebar -->
+    <div class="lg:col-span-1 space-y-6 hidden lg:block">
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+            <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">الأطراف المشاركة</h4>
+            
+            <div class="space-y-6">
+                <!-- User 1 -->
+                <div class="flex items-center">
+                    <img src="https://ui-avatars.com/api/?name=@user1?.FullName&background=random" class="w-10 h-10 rounded-xl shadow-sm">
+                    <div class="mr-3">
+                        <p class="text-xs font-black text-gray-800">@user1?.FullName</p>
+                        <p class="text-[10px] text-indigo-500 font-bold italic">طالب / عميل</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-center"><i class="fas fa-arrows-v text-gray-200"></i></div>
+
+                <!-- User 2 -->
+                <div class="flex items-center">
+                    <img src="https://ui-avatars.com/api/?name=@user2?.FullName&background=6366F1&color=fff" class="w-10 h-10 rounded-xl shadow-sm">
+                    <div class="mr-3">
+                        <p class="text-xs font-black text-gray-800">@user2?.FullName</p>
+                        <p class="text-[10px] text-purple-500 font-bold italic">منفذ خدمات</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-indigo-50 rounded-3xl p-6 border border-indigo-100">
+            <h4 class="text-sm font-black text-indigo-900 mb-2">تعليمات الرقابة</h4>
+            <p class="text-[10px] text-indigo-700 leading-relaxed">
+                هذه الصفحة تمنحك صلاحية الإطلاع فقط. لا يمكن للأدمن إرسال رسائل في هذه الدردشة إلا من خلال فتح "تذكرة دعم فني" رسمية لضمان الشفافية.
+            </p>
+        </div>
+    </div>
+
+    <!-- Chat Display Area -->
+    <div class="lg:col-span-3 flex flex-col bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+        <div class="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse ml-3"></div>
+                <h3 class="font-black text-gray-800">سجل الرسائل الكامل</h3>
+            </div>
+            <span class="text-[10px] font-bold text-gray-400">إجمالي الرسائل: @Model.Messages.Count()</span>
+        </div>
+
+        <div id="messagesContainer" class="flex-1 overflow-y-auto p-8 space-y-6 bg-[#f8f9fc]">
+            @if(!Model.Messages.Any())
+            {
+                <div class="h-full flex flex-col items-center justify-center opacity-20">
+                    <i class="fas fa-comment-dots text-8xl mb-4"></i>
+                    <p class="font-bold">المحادثة فارغة تماماً</p>
+                </div>
+            }
+            @foreach (var msg in Model.Messages)
+            {
+                var isUser1 = msg.SenderId == user1?.Id;
+                <div class="flex @(isUser1 ? "justify-start" : "justify-end")">
+                    <div class="max-w-[70%] @(isUser1 ? "bg-white text-gray-800 rounded-2xl rounded-tr-none shadow-md border border-gray-100" : "bg-indigo-600 text-white rounded-2xl rounded-tl-none shadow-indigo-100") p-4">
+                        <div class="flex items-center mb-2">
+                            <span class="text-[9px] font-black uppercase tracking-tighter @(isUser1 ? "text-indigo-600" : "text-indigo-200")">
+                                @msg.Sender.FullName
+                            </span>
+                            <span class="mx-2 text-[9px] opacity-40">•</span>
+                            <span class="text-[9px] opacity-60">@msg.SentAt.ToLocalTime().ToString("f")</span>
+                        </div>
+                        <p class="text-sm font-medium leading-relaxed">@msg.Content</p>
+                        @if (!string.IsNullOrEmpty(msg.AttachmentUrl))
+                        {
+                            <div class="mt-3">
+                                @if(msg.AttachmentType == "image") {
+                                    <a href="@msg.AttachmentUrl" target="_blank"><img src="@msg.AttachmentUrl" class="max-w-full rounded-lg max-h-40" /></a>
+                                } else if(msg.AttachmentType == "voice") {
+                                    <audio controls src="@msg.AttachmentUrl" class="w-full max-w-[200px] mt-2"></audio>
+                                } else {
+                                    <a href="@msg.AttachmentUrl" target="_blank" class="flex items-center p-2 bg-black/10 rounded-lg text-xs font-bold hover:bg-black/20 w-fit">
+                                        <i class="fas fa-file-download ml-2"></i> تحميل المرفق
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const container = document.getElementById('messagesContainer');
+        container.scrollTop = container.scrollHeight;
+    </script>
+}

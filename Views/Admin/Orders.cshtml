@@ -1,0 +1,102 @@
+@model IEnumerable<Uis.Server.Models.Order>
+
+@{
+    ViewData["Title"] = "إدارة الطلبات";
+}
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+    <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <h3 class="text-xl font-bold text-gray-800 underline decoration-indigo-500 decoration-4 underline-offset-8">متابعة طلبات العملاء</h3>
+    </div>
+
+    <div class="p-4 bg-gray-50 border-b border-gray-100">
+        <!-- Search & Filter Form -->
+        <form method="get" class="flex flex-wrap items-center gap-3 rtl:space-x-reverse">
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" name="search" value="@ViewBag.Search" placeholder="بحث بالرقم أو اسم الطالب..." 
+                       class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none min-w-[200px]">
+            </div>
+            
+            <select name="status" class="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
+                <option value="">كل الحالات</option>
+                <option value="Pending" selected="@(ViewBag.Status == "Pending")">قيد الانتظار</option>
+                <option value="In Progress" selected="@(ViewBag.Status == "In Progress")">قيد التنفيذ</option>
+                <option value="Completed" selected="@(ViewBag.Status == "Completed")">مكتمل</option>
+                <option value="Cancelled" selected="@(ViewBag.Status == "Cancelled")">ملغي</option>
+            </select>
+
+            <select name="executorId" class="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
+                <option value="">كل المنفذين</option>
+                @foreach(var exec in (IEnumerable<Uis.Server.Models.User>)ViewBag.Executors)
+                {
+                    <option value="@exec.Id" selected="@(ViewBag.ExecutorId == exec.Id)">@exec.FullName</option>
+                }
+            </select>
+
+            <div class="flex items-center gap-2">
+                <input type="number" name="minPrice" value="@ViewBag.MinPrice" placeholder="السعر من" class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-24">
+                <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" placeholder="السعر إلى" class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-24">
+            </div>
+
+            <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-gray-500">من:</label>
+                <input type="date" name="startDate" value="@ViewBag.StartDate" class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+            <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-gray-500">إلى:</label>
+                <input type="date" name="endDate" value="@ViewBag.EndDate" class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+
+            <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md">تصفية</button>
+            
+            @if(!string.IsNullOrEmpty(ViewBag.Search) || !string.IsNullOrEmpty(ViewBag.Status) || ViewBag.MinPrice != null || ViewBag.MaxPrice != null || !string.IsNullOrEmpty(ViewBag.StartDate) || ViewBag.ExecutorId != null)
+            {
+                <a href="/Admin/Orders" class="text-red-500 text-sm font-bold hover:underline">إلغاء</a>
+            }
+        </form>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-right">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold text-xs uppercase tracking-tighter">
+                    <th class="p-4">الرقم</th>
+                    <th class="p-4">الخدمة</th>
+                    <th class="p-4">الطالب</th>
+                    <th class="p-4">المنفذ</th>
+                    <th class="p-4 text-center">الحالة الحالية</th>
+                    <th class="p-4">المبلغ</th>
+                    <th class="p-4 text-center">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+                @foreach (var order in Model)
+                {
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="p-4 font-mono text-xs text-gray-400">#@order.Id.ToString().Substring(0,8)</td>
+                        <td class="p-4 font-bold text-gray-800">@(order.Service?.Title ?? "خدمة محذوفة")</td>
+                        <td class="p-4 text-gray-600 font-medium">@(order.Student?.FullName ?? "مستخدم محذوف")</td>
+                        <td class="p-4 text-gray-600 font-medium text-xs">@(order.Executor?.FullName ?? "غير محدد")</td>
+                        <td class="p-4 text-center">
+                            <span class="px-3 py-1 rounded-full text-xs font-black border
+                                @(order.Status == "Pending" ? "bg-orange-50 text-orange-700 border-orange-200" : 
+                                  order.Status == "In Progress" ? "bg-blue-50 text-blue-700 border-blue-200" : 
+                                  order.Status == "Completed" ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200")">
+                                @(order.Status == "Pending" ? "قيد الانتظار" : 
+                                  order.Status == "In Progress" ? "قيد التنفيذ" : 
+                                  order.Status == "Completed" ? "مكتمل" : "ملغي")
+                            </span>
+                        </td>
+                        <td class="p-4 font-extrabold text-indigo-600">@order.Price.ToString("N0") ج.م</td>
+                        <td class="p-4 text-center">
+                            <a asp-action="OrderDetails" asp-route-id="@order.Id" class="inline-block bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white border border-indigo-200 px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm">
+                                <i class="fas fa-eye ml-1"></i> التفاصيل
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

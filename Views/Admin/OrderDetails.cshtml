@@ -1,0 +1,196 @@
+@model Uis.Server.Models.Order
+
+@{
+    ViewData["Title"] = $"تفاصيل الطلب #{Model.Id.ToString().Substring(0, 8)}";
+    var payment = ViewBag.Payment as Uis.Server.Models.Payment;
+    var escrow = ViewBag.Escrow as Uis.Server.Models.Escrow;
+}
+
+<div class="mb-6">
+    <a href="/Admin/Orders" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center transition-all">
+        <i class="fas fa-arrow-right ml-2"></i> العودة لقائمة الطلبات
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Main Order Details -->
+    <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <div class="flex justify-between items-start mb-8">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800">@Model.Service.Title</h2>
+                    <p class="text-gray-400 mt-1">تاريخ الطلب: @Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</p>
+                </div>
+                <span class="px-4 py-1.5 rounded-full text-sm font-black border
+                    @(Model.Status == "Pending" ? "bg-orange-50 text-orange-700 border-orange-200" : 
+                      Model.Status == "In Progress" ? "bg-blue-50 text-blue-700 border-blue-200" : 
+                      Model.Status == "Completed" ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200")">
+                    @Model.Status
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-gray-50">
+                <div>
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">بيانات العميل (الطالب)</h4>
+                    <div class="flex items-center bg-gray-50 p-4 rounded-2xl">
+                        <img src="https://ui-avatars.com/api/?name=@Model.Student.FullName&background=random" class="w-12 h-12 rounded-xl shadow-sm">
+                        <div class="mr-4">
+                            <p class="font-bold text-gray-800">@Model.Student.FullName</p>
+                            <p class="text-xs text-gray-500">@Model.Student.Email</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">المنفذ (Executor)</h4>
+                    @if (Model.Executor != null)
+                    {
+                        <div class="flex items-center bg-indigo-50 p-4 rounded-2xl">
+                            <img src="https://ui-avatars.com/api/?name=@Model.Executor.FullName&background=6366F1&color=fff" class="w-12 h-12 rounded-xl shadow-sm">
+                            <div class="mr-4">
+                                <p class="font-bold text-indigo-900">@Model.Executor.FullName</p>
+                                <p class="text-xs text-indigo-600">@Model.Executor.Email</p>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="flex items-center justify-center bg-gray-50 p-4 rounded-2xl border-2 border-dashed border-gray-200 h-20">
+                            <p class="text-sm text-gray-400 italic">بانتظار قبول منفذ للخدمة</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Timeline / Tracking -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <h3 class="text-lg font-bold text-gray-800 mb-8">تتبع حالة الطلب</h3>
+            <div class="relative">
+                <div class="absolute right-4 top-0 bottom-0 w-0.5 bg-gray-100"></div>
+                <div class="space-y-10 relative">
+                    <div class="flex items-center mr-0 relative">
+                        <div class="w-8 h-8 rounded-full bg-green-500 border-4 border-white shadow-sm z-10 flex items-center justify-center">
+                            <i class="fas fa-check text-white text-[10px]"></i>
+                        </div>
+                        <div class="mr-6">
+                            <p class="font-bold text-gray-800">تم إنشاء الطلب ودفع العربون</p>
+                            <p class="text-xs text-gray-400">@Model.CreatedAt.ToString("f")</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center mr-0 relative">
+                        <div class="w-8 h-8 rounded-full @(Model.ExecutorId.HasValue ? "bg-green-500" : "bg-gray-200") border-4 border-white shadow-sm z-10 flex items-center justify-center">
+                            @if(Model.ExecutorId.HasValue) { <i class="fas fa-check text-white text-[10px]"></i> }
+                        </div>
+                        <div class="mr-6">
+                            <p class="font-bold @(Model.ExecutorId.HasValue ? "text-gray-800" : "text-gray-300")">تعيين منفذ للخدمة</p>
+                            @if(Model.ExecutorId.HasValue) { <p class="text-xs text-gray-400">تم التعيين بنجاح</p> }
+                        </div>
+                    </div>
+                    <div class="flex items-center mr-0 relative">
+                        <div class="w-8 h-8 rounded-full @(Model.Status == "Completed" ? "bg-green-500" : "bg-gray-200") border-4 border-white shadow-sm z-10 flex items-center justify-center">
+                             @if(Model.Status == "Completed") { <i class="fas fa-check text-white text-[10px]"></i> }
+                        </div>
+                        <div class="mr-6">
+                            <p class="font-bold @(Model.Status == "Completed" ? "text-gray-800" : "text-gray-300")">تسليم الملفات والاعتماد</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat History -->
+        @{
+            var chat = ViewBag.Chat as Uis.Server.Models.Chat;
+        }
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-comments ml-3 text-indigo-500"></i> سجل المحادثة بين الطرفين
+            </h3>
+            
+            <div class="space-y-4 max-h-[400px] overflow-y-auto p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                @if(chat == null || !chat.Messages.Any())
+                {
+                    <div class="text-center py-8 text-gray-400 italic">
+                        <i class="fas fa-comment-slash text-3xl mb-3 block opacity-20"></i>
+                        لا توجد رسائل متبادلة في هذا الطلب بعد.
+                    </div>
+                }
+                else
+                {
+                    @foreach (var msg in chat.Messages)
+                    {
+                        var isStudent = msg.SenderId == Model.StudentId;
+                        <div class="flex @(isStudent ? "justify-start" : "justify-end")">
+                            <div class="max-w-[80%] @(isStudent ? "bg-white border border-gray-100" : "bg-indigo-600 text-white") p-3 rounded-2xl shadow-sm">
+                                <div class="flex items-center mb-1">
+                                    <span class="text-[9px] font-black uppercase tracking-tighter @(isStudent ? "text-indigo-600" : "text-indigo-200")">
+                                        @(isStudent ? "الطالب" : "المنفذ")
+                                    </span>
+                                    <span class="mx-1.5 text-[9px] opacity-30">•</span>
+                                    <span class="text-[9px] opacity-50">@msg.SentAt.ToString("HH:mm")</span>
+                                </div>
+                                <p class="text-xs font-medium leading-relaxed">@msg.Content</p>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+            <p class="text-[10px] text-gray-400 mt-4 text-center">
+                <i class="fas fa-info-circle ml-1"></i> يتم تسجيل هذه المحادثة لضمان حقوق الطرفين ولأغراض التحكيم عند حدوث نزاع.
+            </p>
+        </div>
+    </div>
+
+    <!-- Sidebar Financial Info -->
+    <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 overflow-hidden relative">
+            <div class="absolute -left-10 -top-10 w-32 h-32 bg-indigo-50 rounded-full blur-3xl opacity-50"></div>
+            <h4 class="text-sm font-bold text-gray-400 uppercase mb-6 relative z-10">الملخص المالي</h4>
+            
+            <div class="space-y-4 relative z-10">
+                <div class="flex justify-between py-2 border-b border-gray-50">
+                    <span class="text-gray-500 text-sm">قيمة الخدمة</span>
+                    <span class="font-black text-gray-800">@Model.Price.ToString("N2") ج.م</span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-gray-50 text-green-600">
+                    <span class="text-sm font-bold">الحالة المالية</span>
+                    <span class="text-sm font-black">@(payment?.Status ?? "بانتظار الدفع")</span>
+                </div>
+                @if(escrow != null)
+                {
+                    <div class="bg-indigo-900 text-white p-4 rounded-xl mt-4 shadow-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-bold uppercase opacity-60 tracking-widest">في الضمان (Escrow)</span>
+                            <i class="fas fa-shield-alt text-indigo-400"></i>
+                        </div>
+                        <p class="text-xl font-black">@escrow.Amount.ToString("N2") ج.م</p>
+                        <p class="text-[10px] mt-2 opacity-80">الحالة: @escrow.Status</p>
+                    </div>
+                }
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-gray-50 space-y-4">
+                <h4 class="text-xs font-black text-gray-400 uppercase">إجراءات الإدارة</h4>
+                <form asp-action="UpdateOrderStatus" method="post" class="space-y-3">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <select name="status" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="Pending" selected="@(Model.Status == "Pending")">قيد الانتظار</option>
+                        <option value="In Progress" selected="@(Model.Status == "In Progress")">قيد التنفيذ</option>
+                        <option value="Completed" selected="@(Model.Status == "Completed")">مكتمل</option>
+                        <option value="Cancelled" selected="@(Model.Status == "Cancelled")">ملغي</option>
+                    </select>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-md">
+                        تحديث حالة الطلب
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="bg-amber-50 rounded-2xl border border-amber-100 p-6">
+            <h4 class="font-bold text-amber-900 mb-2"><i class="fas fa-exclamation-triangle ml-2"></i>ملاحظات أمنية</h4>
+            <p class="text-xs text-amber-700 leading-relaxed">
+                لا تقم بتغيير حالة الطلب إلى "مكتمل" يدوياً إلا بعد التأكد من تسليم الملفات بشكل صحيح للعميل، حيث أن هذا الإجراء سيؤدي لإطلاق المبالغ المجمّدة للمنفذ.
+            </p>
+        </div>
+    </div>
+</div>

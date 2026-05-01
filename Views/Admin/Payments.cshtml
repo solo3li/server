@@ -1,0 +1,95 @@
+@model IEnumerable<Uis.Server.Models.Payment>
+
+@{
+    ViewData["Title"] = "سجل المدفوعات";
+}
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+    <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <h3 class="text-xl font-bold text-gray-800 underline decoration-indigo-500 decoration-4 underline-offset-8">العمليات المالية</h3>
+        <div class="flex items-center space-x-3 rtl:space-x-reverse">
+            <span class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg">
+                إجمالي المحصل: @Model.Where(p => p.Status == "Completed").Sum(p => p.Amount).ToString("N0") ج.م
+            </span>
+        </div>
+    </div>
+
+    <div class="p-4 bg-gray-50 border-b border-gray-100">
+        <!-- Search & Filter Form -->
+        <form method="get" class="flex flex-wrap items-center gap-3 rtl:space-x-reverse">
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" name="search" value="@ViewBag.Search" placeholder="بحث بالمعرف أو اسم العميل..." 
+                       class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none min-w-[200px]">
+            </div>
+            
+            <select name="status" class="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
+                <option value="">كل الحالات</option>
+                <option value="Completed" selected="@(ViewBag.Status == "Completed")">مكتمل</option>
+                <option value="Pending" selected="@(ViewBag.Status == "Pending")">قيد الانتظار</option>
+                <option value="Failed" selected="@(ViewBag.Status == "Failed")">فاشل</option>
+            </select>
+
+            <div class="flex items-center gap-2">
+                <input type="number" name="minAmount" value="@ViewBag.MinAmount" placeholder="المبلغ من" class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-24">
+                <input type="number" name="maxAmount" value="@ViewBag.MaxAmount" placeholder="المبلغ إلى" class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-24">
+            </div>
+
+            <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-gray-500">من:</label>
+                <input type="date" name="startDate" value="@ViewBag.StartDate" class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+            <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-gray-500">إلى:</label>
+                <input type="date" name="endDate" value="@ViewBag.EndDate" class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+
+            <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md">تصفية</button>
+            
+            @if(!string.IsNullOrEmpty(ViewBag.Search) || !string.IsNullOrEmpty(ViewBag.Status) || ViewBag.MinAmount != null || !string.IsNullOrEmpty(ViewBag.StartDate))
+            {
+                <a href="/Admin/Payments" class="text-red-500 text-sm font-bold hover:underline">إلغاء</a>
+            }
+        </form>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-right">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold text-xs uppercase tracking-widest">
+                    <th class="p-4">معرف العملية</th>
+                    <th class="p-4">المبلغ</th>
+                    <th class="p-4 text-center">الحالة</th>
+                    <th class="p-4">العميل</th>
+                    <th class="p-4">رقم الطلب</th>
+                    <th class="p-4 text-center">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+                @if(!Model.Any()) {
+                    <tr><td colspan="6" class="p-8 text-center text-gray-400 italic">لا توجد سجلات مدفوعات تطابق البحث.</td></tr>
+                }
+                @foreach (var pay in Model)
+                {
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="p-4 font-mono text-xs text-gray-400">@pay.TransactionId</td>
+                        <td class="p-4 font-black text-indigo-600">@pay.Amount.ToString("N2") ج.م</td>
+                        <td class="p-4 text-center">
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black border 
+                                @(pay.Status == "Completed" ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200")">
+                                @pay.Status
+                            </span>
+                        </td>
+                        <td class="p-4 font-medium text-gray-700">@(pay.Order?.Student?.FullName ?? "-")</td>
+                        <td class="p-4 font-mono text-[10px] text-indigo-400">#@pay.OrderId.ToString().Substring(0,8)</td>
+                        <td class="p-4 text-center">
+                            <a asp-action="PaymentDetails" asp-route-id="@pay.Id" class="inline-block bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-4 py-1.5 rounded-xl text-xs font-black transition-all shadow-sm">
+                                <i class="fas fa-file-invoice-dollar ml-1"></i> التفاصيل
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

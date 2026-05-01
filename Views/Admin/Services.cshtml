@@ -1,0 +1,104 @@
+@model IEnumerable<Uis.Server.Models.Service>
+
+@{
+    ViewData["Title"] = "إدارة الخدمات";
+    var categories = ViewBag.Categories as IEnumerable<Uis.Server.Models.Category>;
+}
+
+<div class="mb-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+    <h3 class="text-xl font-bold text-gray-800 underline decoration-indigo-500 decoration-4 underline-offset-8">الخدمات المتاحة</h3>
+    
+    <a asp-action="CreateService" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-md flex items-center">
+        <i class="fas fa-plus ml-2"></i>إضافة خدمة
+    </a>
+</div>
+
+<div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-6">
+    <!-- Search & Filter Form -->
+    <form method="get" class="flex flex-wrap items-center gap-3 rtl:space-x-reverse">
+        <div class="relative">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input type="text" name="search" value="@ViewBag.Search" placeholder="بحث باسم الخدمة..." 
+                   class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none min-w-[150px]">
+        </div>
+        <select name="categoryId" class="px-4 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
+            <option value="">كل التصنيفات</option>
+            @foreach(var cat in categories)
+            {
+                <option value="@cat.Id" selected="@(ViewBag.SelectedCategoryId?.ToString() == cat.Id.ToString())">@cat.Name</option>
+            }
+        </select>
+        <select name="isActive" class="px-4 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
+            <option value="">كل الحالات</option>
+            <option value="true" selected="@(ViewBag.IsActive == true)">نشطة</option>
+            <option value="false" selected="@(ViewBag.IsActive == false)">معطلة</option>
+        </select>
+        <div class="flex items-center gap-2">
+            <input type="number" name="minPrice" value="@ViewBag.MinPrice" placeholder="السعر من" class="w-20 px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+            <span class="text-gray-400">-</span>
+            <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" placeholder="إلى" class="w-20 px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+        <button type="submit" class="bg-gray-800 text-white px-6 py-2 rounded-xl font-bold hover:bg-black transition-all shadow-md text-xs">تصفية</button>
+        @if(!string.IsNullOrEmpty(ViewBag.Search) || ViewBag.SelectedCategoryId != null || ViewBag.IsActive != null || ViewBag.MinPrice != null || ViewBag.MaxPrice != null)
+        {
+            <a href="/Admin/Services" class="text-red-500 text-xs font-bold hover:underline">إلغاء</a>
+        }
+    </form>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-right">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold text-sm uppercase tracking-wider">
+                    <th class="p-4">عنوان الخدمة</th>
+                    <th class="p-4">التصنيف</th>
+                    <th class="p-4">السعر الأساسي</th>
+                    <th class="p-4 text-center">الحالة</th>
+                    <th class="p-4 text-center">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+                @if(!Model.Any())
+                {
+                    <tr><td colspan="5" class="p-8 text-center text-gray-400 italic">لا توجد خدمات تطابق معايير البحث.</td></tr>
+                }
+                @foreach (var srv in Model)
+                {
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="p-4 font-bold text-gray-800">@srv.Title</td>
+                        <td class="p-4">
+                            <span class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-[10px] font-black border border-indigo-100 uppercase">
+                                @(srv.Category?.Name ?? "غير مصنف")
+                            </span>
+                        </td>
+                        <td class="p-4 font-extrabold text-gray-700">@srv.BasePrice.ToString("N2") ج.م</td>
+                        <td class="p-4 text-center">
+                            @if (srv.IsActive)
+                            {
+                                <span class="bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full text-[10px] font-black border border-green-200">نشطة</span>
+                            }
+                            else
+                            {
+                                <span class="bg-gray-100 text-gray-800 px-2.5 py-0.5 rounded-full text-[10px] font-black border border-gray-200">معطلة</span>
+                            }
+                        </td>
+                        <td class="p-4">
+                            <div class="flex justify-center space-x-2 rtl:space-x-reverse">
+                                <form asp-action="ToggleServiceStatus" asp-route-id="@srv.Id" method="post">
+                                    <button type="submit" class="p-2 rounded-lg @(srv.IsActive ? "text-orange-500 hover:bg-orange-50" : "text-green-500 hover:bg-green-50")" title="@(srv.IsActive ? "تعطيل" : "تفعيل")">
+                                        <i class="fas @(srv.IsActive ? "fa-eye-slash" : "fa-eye")"></i>
+                                    </button>
+                                </form>
+                                <a asp-action="EditService" asp-route-id="@srv.Id" class="text-blue-500 hover:bg-blue-50 p-2 rounded-lg" title="تعديل"><i class="fas fa-edit"></i></a>
+                                <form asp-action="DeleteService" asp-route-id="@srv.Id" method="post" onsubmit="return confirm('هل أنت متأكد من حذف هذه الخدمة؟')">
+                                    <button type="submit" class="text-red-500 hover:bg-red-50 p-2 rounded-lg" title="حذف"><i class="fas fa-trash-alt"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

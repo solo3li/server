@@ -1,0 +1,118 @@
+@model IEnumerable<Uis.Server.Models.KycRequest>
+
+@{
+    ViewData["Title"] = "مراجعة طلبات KYC";
+}
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center bg-gray-50/50 gap-4">
+        <h3 class="text-lg font-bold text-gray-800">الطلبات الواردة للمراجعة</h3>
+        
+        <form method="get" class="flex flex-wrap items-center gap-3 rtl:space-x-reverse">
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" name="search" value="@ViewBag.Search" placeholder="بحث بالاسم أو الرقم القومي..." 
+                       class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none min-w-[200px]">
+            </div>
+            <select name="status" class="px-4 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
+                <option value="">كل الحالات</option>
+                <option value="Pending" selected="@(ViewBag.Status == "Pending")">معلق</option>
+                <option value="Approved" selected="@(ViewBag.Status == "Approved")">مقبول</option>
+                <option value="Rejected" selected="@(ViewBag.Status == "Rejected")">مرفوض</option>
+            </select>
+            <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md text-xs">تصفية</button>
+            @if(!string.IsNullOrEmpty(ViewBag.Search) || !string.IsNullOrEmpty(ViewBag.Status))
+            {
+                <a href="/Admin/Kyc" class="text-red-500 text-xs font-bold hover:underline">إلغاء</a>
+            }
+        </form>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-right">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-semibold text-sm">
+                    <th class="p-4">اسم المستخدم</th>
+                    <th class="p-4">الرقم القومي</th>
+                    <th class="p-4">رقم الهاتف</th>
+                    <th class="p-4 text-center">الحالة</th>
+                    <th class="p-4">المستندات</th>
+                    <th class="p-4 text-center">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+                @if(!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-gray-500 italic">لا توجد طلبات مطابقة للمعايير حالياً.</td>
+                    </tr>
+                }
+                @foreach (var req in Model)
+                {
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="p-4 font-medium text-gray-800">
+                            <div>@req.User?.FullName</div>
+                            <div class="text-[10px] text-gray-400">@req.User?.Email</div>
+                        </td>
+                        <td class="p-4 font-mono text-gray-600">@req.NationalId</td>
+                        <td class="p-4 font-mono text-gray-600" dir="ltr">@req.Phone</td>
+                        <td class="p-4 text-center">
+                            <span class="px-2 py-1 rounded-md text-xs font-bold
+                                @(req.Status == "Pending" ? "bg-yellow-100 text-yellow-800" : 
+                                  req.Status == "Approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
+                                @(req.Status == "Pending" ? "بانتظار المراجعة" : req.Status == "Approved" ? "تم القبول" : "مرفوض")
+                            </span>
+                        </td>
+                        <td class="p-4">
+                            <a asp-action="KycDetails" asp-route-id="@req.Id" class="text-indigo-600 hover:text-indigo-800 text-xs font-black border border-indigo-200 px-3 py-1.5 rounded-xl bg-indigo-50 transition-all inline-block shadow-sm">
+                                <i class="fas fa-search-plus ml-1"></i> مراجعة والتحقق
+                            </a>
+                        </td>
+                        <td class="p-4">
+                            @if(req.Status == "Pending")
+                            {
+                                <div class="flex justify-center space-x-2 rtl:space-x-reverse">
+                                    <form asp-action="ApproveKyc" asp-route-id="@req.Id" method="post">
+                                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm">
+                                            <i class="fas fa-check ml-1"></i>قبول
+                                        </button>
+                                    </form>
+                                    
+                                    <button onclick="document.getElementById('reject-modal-@req.Id').classList.remove('hidden')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm">
+                                        <i class="fas fa-times ml-1"></i>رفض
+                                    </button>
+                                </div>
+                            }
+                            else if(!string.IsNullOrEmpty(req.RejectionReason))
+                            {
+                                <div class="group relative inline-block">
+                                    <i class="fas fa-exclamation-circle text-red-400 cursor-help"></i>
+                                    <div class="hidden group-hover:block absolute z-10 bg-black text-white text-[10px] p-2 rounded w-32 -left-16 bottom-full mb-1">
+                                        @req.RejectionReason
+                                    </div>
+                                </div>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@foreach (var req in Model.Where(r => r.Status == "Pending"))
+{
+    <!-- Reject Reason Modal (Simple) -->
+    <div id="reject-modal-@req.Id" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl">
+            <h4 class="text-lg font-bold text-gray-800 mb-4">سبب الرفض للطلب: @req.User?.FullName</h4>
+            <form asp-action="RejectKyc" asp-route-id="@req.Id" method="post">
+                <textarea name="reason" required class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-500 outline-none" rows="3" placeholder="اكتب سبب الرفض هنا..."></textarea>
+                <div class="mt-4 flex justify-end space-x-2 rtl:space-x-reverse">
+                    <button type="button" onclick="document.getElementById('reject-modal-@req.Id').classList.add('hidden')" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-bold text-xs">إلغاء</button>
+                    <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-xs">تأكيد الرفض</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}

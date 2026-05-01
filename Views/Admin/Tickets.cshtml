@@ -1,0 +1,102 @@
+@model IEnumerable<Uis.Server.Models.Ticket>
+
+@{
+    ViewData["Title"] = "تذاكر الدعم الفني والنزاعات";
+}
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+    <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <h3 class="text-xl font-bold text-gray-800 underline decoration-indigo-500 decoration-4 underline-offset-8">تذاكر الدعم والنزاعات</h3>
+    </div>
+    
+    <div class="p-4 bg-gray-50 border-b border-gray-100">
+        <!-- Search & Filter Form -->
+        <form method="get" class="flex flex-wrap items-center gap-3 rtl:space-x-reverse">
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" name="search" value="@ViewBag.Search" placeholder="بحث بالموضوع أو اسم المستخدم..." 
+                       class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none min-w-[200px]">
+            </div>
+            
+            <select name="status" class="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
+                <option value="">كل الحالات</option>
+                <option value="Open" selected="@(ViewBag.Status == "Open")">مفتوحة</option>
+                <option value="Closed" selected="@(ViewBag.Status == "Closed")">مغلقة</option>
+            </select>
+
+            <select name="userId" class="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold">
+                <option value="">كل المستخدمين</option>
+                @foreach(var user in (IEnumerable<Uis.Server.Models.User>)ViewBag.Users)
+                {
+                    <option value="@user.Id" selected="@(ViewBag.UserId == user.Id)">@user.FullName</option>
+                }
+            </select>
+
+            <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-gray-500">من:</label>
+                <input type="date" name="startDate" value="@ViewBag.StartDate" class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+            <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-gray-500">إلى:</label>
+                <input type="date" name="endDate" value="@ViewBag.EndDate" class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+
+            <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md">تصفية</button>
+            
+            @if(!string.IsNullOrEmpty(ViewBag.Search) || !string.IsNullOrEmpty(ViewBag.Status) || ViewBag.UserId != null || !string.IsNullOrEmpty(ViewBag.StartDate))
+            {
+                <a href="/Admin/Tickets" class="text-red-500 text-sm font-bold hover:underline">إلغاء</a>
+            }
+        </form>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-right">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold text-sm">
+                    <th class="p-4">رقم التذكرة</th>
+                    <th class="p-4">الموضوع</th>
+                    <th class="p-4">بواسطة</th>
+                    <th class="p-4">التاريخ</th>
+                    <th class="p-4 text-center">الحالة</th>
+                    <th class="p-4 text-center">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+                @if(!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-gray-500 italic">لا توجد تذاكر تطابق معايير البحث.</td>
+                    </tr>
+                }
+                @foreach (var ticket in Model)
+                {
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="p-4 font-mono text-xs text-gray-500">
+                            #@ticket.Id.ToString().Substring(0, 8)
+                        </td>
+                        <td class="p-4 font-bold text-gray-800">@ticket.Subject</td>
+                        <td class="p-4 text-gray-600 font-medium">
+                            <span class="inline-flex items-center">
+                                <i class="fas fa-user-circle text-indigo-300 ml-2"></i>
+                                @(ticket.User?.FullName ?? "مستخدم محذوف")
+                            </span>
+                        </td>
+                        <td class="p-4 text-gray-500 text-xs">@ticket.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                        <td class="p-4 text-center">
+                            <span class="px-3 py-1 rounded-full text-xs font-black border
+                                @(ticket.Status == "Open" ? "bg-red-50 text-red-600 border-red-200" : "bg-gray-50 text-gray-600 border-gray-200")">
+                                @(ticket.Status == "Open" ? "مفتوحة" : "مغلقة")
+                            </span>
+                        </td>
+                        <td class="p-4 text-center">
+                            <a asp-action="TicketDetails" asp-route-id="@ticket.Id" class="inline-block bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white border border-indigo-200 px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm">
+                                <i class="fas fa-reply ml-1"></i> عرض
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

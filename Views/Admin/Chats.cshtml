@@ -1,0 +1,88 @@
+@model IEnumerable<Uis.Server.Models.Chat>
+
+@{
+    ViewData["Title"] = "الرقابة على المحادثات";
+}
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+    <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <h3 class="text-xl font-bold text-gray-800 underline decoration-indigo-500 decoration-4 underline-offset-8">مراقبة التفاعلات المباشرة</h3>
+    </div>
+
+    <div class="p-4 bg-gray-50 border-b border-gray-100">
+        <!-- Search & Filter Form -->
+        <form method="get" class="flex flex-wrap items-center gap-3 rtl:space-x-reverse">
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" name="search" value="@ViewBag.Search" placeholder="بحث برقم الطلب أو المشاركين..." 
+                       class="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none min-w-[250px]">
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-gray-500">من:</label>
+                <input type="date" name="startDate" value="@ViewBag.StartDate" class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+            <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-gray-500">إلى:</label>
+                <input type="date" name="endDate" value="@ViewBag.EndDate" class="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+
+            <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md">تصفية</button>
+            
+            @if(!string.IsNullOrEmpty(ViewBag.Search) || !string.IsNullOrEmpty(ViewBag.StartDate))
+            {
+                <a href="/Admin/Chats" class="text-red-500 text-sm font-bold hover:underline">إلغاء</a>
+            }
+        </form>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-right">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold text-xs uppercase tracking-widest">
+                    <th class="p-4">نوع المحادثة</th>
+                    <th class="p-4">الأطراف المشاركة</th>
+                    <th class="p-4">آخر رسالة</th>
+                    <th class="p-4 text-center">النشاط</th>
+                    <th class="p-4 text-center">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+                @foreach (var chat in Model)
+                {
+                    var lastMsg = chat.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault();
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="p-4">
+                            @if(chat.OrderId.HasValue)
+                            {
+                                <span class="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-[10px] font-black border border-blue-100">طلب #@chat.OrderId.Value.ToString().Substring(0,8)</span>
+                            }
+                            else
+                            {
+                                <span class="bg-purple-50 text-purple-700 px-2 py-1 rounded-md text-[10px] font-black border border-purple-100">دردشة خاصة</span>
+                            }
+                        </td>
+                        <td class="p-4">
+                            <div class="flex items-center space-x-2 rtl:space-x-reverse">
+                                <span class="font-bold text-gray-800">@(chat.Order?.Student?.FullName ?? chat.Student?.FullName ?? "مستخدم")</span>
+                                <i class="fas fa-exchange-alt text-gray-300 text-xs mx-1"></i>
+                                <span class="font-bold text-indigo-600">@(chat.Order?.Executor?.FullName ?? chat.Executor?.FullName ?? "منفذ")</span>
+                            </div>
+                        </td>
+                        <td class="p-4 max-w-xs">
+                            <p class="text-xs text-gray-500 truncate italic">"@(lastMsg?.Content ?? "لا توجد رسائل")"</p>
+                        </td>
+                        <td class="p-4 text-center text-[10px] text-gray-400 font-medium">
+                            @(lastMsg?.SentAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-")
+                        </td>
+                        <td class="p-4 text-center">
+                            <a asp-action="ChatDetails" asp-route-id="@chat.Id" class="inline-block bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-4 py-1.5 rounded-xl text-xs font-black transition-all shadow-sm">
+                                <i class="fas fa-search-eye ml-1"></i> مراقبة
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

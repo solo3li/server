@@ -1,0 +1,87 @@
+@model Uis.Server.Models.Service
+
+@{
+    ViewData["Title"] = $"تعديل خدمة - {Model.Title}";
+    var categories = ViewBag.Categories as IEnumerable<Uis.Server.Models.Category>;
+}
+
+<div class="mb-6">
+    <a href="/Admin/Services" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center transition-all">
+        <i class="fas fa-arrow-right ml-2"></i> العودة لقائمة الخدمات
+    </a>
+</div>
+
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+        <div class="bg-indigo-600 p-8 text-white">
+            <h2 class="text-2xl font-black">تعديل بيانات الخدمة</h2>
+            <p class="text-indigo-100 text-sm mt-1">تحديث بيانات "@Model.Title" لتظهر بشكل دقيق للمستخدمين.</p>
+        </div>
+
+        <form asp-action="EditService" asp-route-id="@Model.Id" method="post" class="p-8 space-y-6" enctype="multipart/form-data">
+            <input type="hidden" asp-for="Id" />
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">عنوان الخدمة</label>
+                    <input type="text" asp-for="Title" required class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">التصنيف</label>
+                    <select asp-for="CategoryId" required class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none bg-white appearance-none">
+                        @foreach(var cat in categories)
+                        {
+                            <option value="@cat.Id" selected="@(cat.Id == Model.CategoryId)">@cat.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">السعر الأساسي (ج.م)</label>
+                    <input type="number" step="0.01" asp-for="BasePrice" required class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">الوصف التفصيلي</label>
+                    <textarea asp-for="Description" required rows="4" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all resize-none" placeholder="اشرح ما سيحصل عليه العميل من هذه الخدمة..."></textarea>
+                </div>
+
+                <div class="md:col-span-2 space-y-4">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">صورة الخدمة</label>
+                    
+                    @if(!string.IsNullOrEmpty(Model.ImageUrl)) {
+                        <div class="flex items-center space-x-4 rtl:space-x-reverse mb-2">
+                            <img src="@(Model.ImageUrl.StartsWith("http") ? Model.ImageUrl : "/uploads/" + Model.ImageUrl)" class="h-24 rounded-2xl shadow-sm border border-gray-100" />
+                            <p class="text-xs text-gray-400">الصورة الحالية</p>
+                        </div>
+                    }
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs text-gray-400 mb-1 mr-1">تغيير عبر رفع ملف</p>
+                            <input type="file" name="imageFile" accept="image/*" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all bg-white">
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 mb-1 mr-1">أو تغيير عبر رابط (URL)</p>
+                            <input type="text" asp-for="ImageUrl" placeholder="https://..." class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-indigo-400 mt-2 font-bold mr-1">ملاحظة: رفع ملف جديد سيتجاوز الرابط المدخل.</p>
+                </div>
+
+                <div class="md:col-span-2 flex items-center bg-gray-50 p-4 rounded-xl">
+                    <input type="checkbox" asp-for="IsActive" class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                    <label class="mr-3 text-sm font-bold text-gray-700">الخدمة نشطة حالياً</label>
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-gray-100 flex space-x-4 rtl:space-x-reverse">
+                <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl transition-all shadow-lg">
+                    تحديث بيانات الخدمة
+                </button>
+                <a href="/Admin/Services" class="px-8 bg-gray-100 text-gray-600 font-bold py-4 rounded-2xl hover:bg-gray-200 transition-all">إلغاء</a>
+            </div>
+        </form>
+    </div>
+</div>

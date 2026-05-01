@@ -1,0 +1,127 @@
+@model Uis.Server.Models.KycRequest
+
+@{
+    ViewData["Title"] = $"مراجعة هوية - {Model.User.FullName}";
+}
+
+<div class="mb-6">
+    <a href="/Admin/Kyc" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center transition-all">
+        <i class="fas fa-arrow-right ml-2"></i> العودة لقائمة الطلبات
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- ID Documents Display -->
+    <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <h3 class="text-xl font-black text-gray-800 mb-8 pb-4 border-b border-gray-50 flex items-center">
+                <i class="fas fa-images ml-3 text-indigo-500"></i> المستندات المرفقة
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-3">
+                    <p class="text-sm font-bold text-gray-500">الوجه الأمامي للبطاقة</p>
+                    <div class="aspect-video bg-gray-100 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden group relative">
+                        <i class="fas fa-id-card text-4xl text-gray-300 group-hover:scale-110 transition-transform"></i>
+                        @if(!string.IsNullOrEmpty(Model.NationalIdFrontUrl)) {
+                            <img src="@Model.NationalIdFrontUrl" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                        } else {
+                            <img src="https://placehold.co/600x400/6366f1/ffffff?text=No+Front+Image" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                        }
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <a href="@(Model.NationalIdFrontUrl ?? "#")" target="_blank" class="bg-white text-gray-900 px-4 py-2 rounded-xl font-bold text-xs shadow-xl"><i class="fas fa-search-plus ml-1"></i> عرض الصورة</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <p class="text-sm font-bold text-gray-500">الوجه الخلفي للبطاقة</p>
+                    <div class="aspect-video bg-gray-100 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden group relative">
+                        <i class="fas fa-id-card text-4xl text-gray-300 group-hover:scale-110 transition-transform"></i>
+                        @if(!string.IsNullOrEmpty(Model.NationalIdBackUrl)) {
+                            <img src="@Model.NationalIdBackUrl" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                        } else {
+                            <img src="https://placehold.co/600x400/a855f7/ffffff?text=No+Back+Image" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                        }
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <a href="@(Model.NationalIdBackUrl ?? "#")" target="_blank" class="bg-white text-gray-900 px-4 py-2 rounded-xl font-bold text-xs shadow-xl"><i class="fas fa-search-plus ml-1"></i> عرض الصورة</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-amber-50 rounded-2xl border border-amber-100 p-6 flex items-start">
+            <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center shrink-0"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="mr-4">
+                <h4 class="font-bold text-amber-900 mb-1 text-sm">توصية أمنية</h4>
+                <p class="text-xs text-amber-700 leading-relaxed">يرجى التأكد من وضوح كافة الأرقام المطبوعة على البطاقة ومطابقتها مع البيانات المدخلة في الجانب الأيسر قبل اتخاذ قرار القبول.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Applicant Info & Actions -->
+    <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h4 class="font-bold text-gray-400 text-[10px] uppercase tracking-widest mb-6">بيانات مقدم الطلب</h4>
+            <div class="flex items-center mb-8">
+                <img src="https://ui-avatars.com/api/?name=@Model.User.FullName&background=random" class="w-14 h-14 rounded-2xl shadow-sm">
+                <div class="mr-4">
+                    <p class="font-black text-gray-800">@Model.User.FullName</p>
+                    <a href="/Admin/Users/@Model.UserId" class="text-[10px] text-indigo-500 font-bold hover:underline">عرض ملف العضو</a>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <p class="text-[10px] text-gray-400 font-bold mb-1">الرقم القومي</p>
+                    <p class="text-sm font-mono font-bold text-gray-700">@Model.NationalId</p>
+                </div>
+                <div class="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <p class="text-[10px] text-gray-400 font-bold mb-1">رقم الهاتف</p>
+                    <p class="text-sm font-mono font-bold text-gray-700" dir="ltr">@Model.Phone</p>
+                </div>
+                <div class="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <p class="text-[10px] text-gray-400 font-bold mb-1">تاريخ تقديم الطلب</p>
+                    <p class="text-sm font-bold text-gray-700">@DateTime.UtcNow.ToLocalTime().ToString("yyyy-MM-dd")</p>
+                </div>
+            </div>
+
+            @if(Model.Status == "Pending")
+            {
+                <div class="mt-8 pt-8 border-t border-gray-50 space-y-3">
+                    <form asp-action="ApproveKyc" asp-route-id="@Model.Id" method="post">
+                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3 rounded-xl transition-all shadow-lg flex items-center justify-center">
+                            <i class="fas fa-check-circle ml-2"></i> اعتماد وقبول الهوية
+                        </button>
+                    </form>
+                    
+                    <button onclick="document.getElementById('reject-modal').classList.remove('hidden')" class="w-full bg-red-50 text-red-600 hover:bg-red-600 hover:text-white border border-red-100 font-black py-3 rounded-xl transition-all flex items-center justify-center">
+                        <i class="fas fa-times-circle ml-2"></i> رفض الطلب
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="mt-8 p-4 rounded-xl text-center border-2 border-dashed @(Model.Status == "Approved" ? "bg-green-50 border-green-200 text-green-700" : "bg-red-50 border-red-200 text-red-700")">
+                    <i class="fas @(Model.Status == "Approved" ? "fa-certificate" : "fa-ban") text-2xl mb-2"></i>
+                    <p class="text-sm font-black">حالة الطلب: @(Model.Status == "Approved" ? "مقبول" : "مرفوض")</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div id="reject-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl scale-in-center">
+        <h4 class="text-xl font-black text-gray-800 mb-2 flex items-center"><i class="fas fa-comment-slash ml-2 text-red-500"></i> رفض الطلب</h4>
+        <p class="text-sm text-gray-500 mb-6">يرجى توضيح سبب الرفض لمقدم الطلب بشكل واضح ليتمكن من تصحيح بياناته.</p>
+        <form asp-action="RejectKyc" asp-route-id="@Model.Id" method="post">
+            <textarea name="reason" required class="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-red-500 outline-none min-h-[120px] transition-all" placeholder="مثال: صورة البطاقة غير واضحة، الرقم القومي غير مطابق..."></textarea>
+            <div class="mt-8 flex space-x-3 rtl:space-x-reverse">
+                <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-xl transition-all shadow-md">تأكيد الرفض</button>
+                <button type="button" onclick="document.getElementById('reject-modal').classList.add('hidden')" class="px-6 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
