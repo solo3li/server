@@ -120,14 +120,16 @@ var app = builder.Build();
 await Uis.Server.Data.DbSeeder.SeedAsync(app.Services);
 
 // Configure the HTTP request pipeline.
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "UIS API v1");
+    c.RoutePrefix = "swagger"; // Access at /swagger
+});
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "UIS API v1");
-        c.RoutePrefix = "swagger"; // Access at /swagger
-    });
+    // Development specific settings if any
 }
 else
 {
@@ -147,6 +149,9 @@ app.UseAuthorization();
 
 // Map SignalR Hubs
 app.MapHub<ChatHub>("/hubs/chat");
+
+// Add a simple health check endpoint
+app.MapGet("/health", () => Results.Ok("Healthy"));
 
 // Map MVC Controllers (Admin) and API Controllers
 app.MapControllerRoute(

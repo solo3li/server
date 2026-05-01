@@ -14,8 +14,11 @@ RUN dotnet publish "Uis.Server.csproj" -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
 WORKDIR /app
 
-# Install PostgreSQL, Redis, Bash, and sed (to fix line endings)
-RUN apk add --no-cache postgresql redis bash sed
+# Install PostgreSQL, Redis, Bash, sed, and globalization support
+RUN apk add --no-cache postgresql redis bash sed icu-libs tzdata
+
+# Set environment variables for globalization
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
 # Setup PostgreSQL directories and permissions
 RUN mkdir -p /var/lib/postgresql/data /var/log/postgresql && \
