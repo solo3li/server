@@ -55,6 +55,17 @@ echo "Ensuring database and user exist..."
 su postgres -c "psql -c \"CREATE DATABASE $DB_NAME;\"" || true
 su postgres -c "psql -c \"ALTER USER postgres WITH PASSWORD '$DB_PASS';\"" || true
 
+# --- Load Environment Variables from .env ---
+if [ -f .env ]; then
+    echo "Loading variables from .env..."
+    # Use a while loop to handle values with spaces correctly
+    while IFS='=' read -r key value; do
+        # Skip comments and empty lines
+        [[ $key =~ ^#.* ]] || [[ -z $key ]] && continue
+        export "$key=$value"
+    done < .env
+fi
+
 # --- Start ASP.NET Core App ---
 echo "Starting Uis.Server on port ${PORT:-80}..."
 # Override connection string to point to localhost
