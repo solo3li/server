@@ -34,23 +34,11 @@ The project follows a standard ASP.NET Core MVC/Web API pattern:
 - Docker Desktop (for PostgreSQL and pgAdmin)
 
 ### Setup Environment
-1.  **Start Database:**
-    ```powershell
-    docker-compose up -d
-    ```
-    *Starts PostgreSQL (`localhost:5432`) and pgAdmin (`localhost:5050`).*
-
-2.  **Apply Migrations:**
-    ```powershell
-    dotnet ef database update
-    ```
-    *Or use the local tool: `dotnet dotnet-ef database update`*
-
-3.  **Run Application:**
+1.  **Run Application locally:**
     ```powershell
     dotnet run
     ```
-    *The server starts at `http://localhost:5035` by default.*
+    *The server starts at `http://localhost:5035` by default. SQLite database will be created automatically.*
 
 4.  **API Documentation (Swagger):**
     Access Swagger UI at `http://localhost:5035/swagger` to explore and test API endpoints.
@@ -95,6 +83,14 @@ The project follows a standard ASP.NET Core MVC/Web API pattern:
 ### 🌐 Network & Access
 - **Backend Port:** 5035
 - **Public URL (Cloudflare):** `https://transmit-cambridge-plus-colon.trycloudflare.com`
+- **Tunnel Process PID:** 22480
+
+### 📧 SMTP Configuration
+- **Server:** `smtp.gmail.com:587`
+- **User:** `fps60y@gmail.com`
+- **Status:** Dynamic management enabled via Admin Panel.
+
+https://transmit-cambridge-plus-colon.trycloudflare.com`
 - **Tunnel Process PID:** 22480
 
 ### 📧 SMTP Configuration

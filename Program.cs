@@ -56,9 +56,9 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Configure PostgreSQL Database
+// Configure SQLite Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

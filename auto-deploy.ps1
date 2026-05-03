@@ -10,7 +10,7 @@ if (docker ps -a --format '{{.Names}}' | Select-String -Pattern "^uis-app$") {
 }
 
 # 2. Build the all-in-one image
-Write-Host "🏗️ Building the all-in-one Docker image (ASP.NET + PG + Redis)..." -ForegroundColor Cyan
+Write-Host "🏗️ Building the Docker image (ASP.NET + SQLite)..." -ForegroundColor Cyan
 docker build -f Dockerfile -t uis-all-in-one .
 
 if ($LASTEXITCODE -ne 0) {
