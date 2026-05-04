@@ -69,18 +69,6 @@ public static class EmailTemplates
         return html.Replace("{TITLE}", title).Replace("{CONTENT}", finalContent);
     }
 
-    public static string GetOtpTemplate(string code)
-    {
-        var content = $@"
-        <p>مرحباً بك في UIS! لإتمام عملية الدخول، يرجى استخدام رمز التحقق التالي:</p>
-        <div style='margin: 35px 0; background-color: #f8fafc; border: 2px dashed {PrimaryColor}; border-radius: 24px; padding: 30px; display: inline-block;'>
-            <span style='font-size: 48px; font-weight: 900; color: {PrimaryColor}; letter-spacing: 15px; font-family: monospace;'>{code}</span>
-        </div>
-        <p style='font-size: 14px; font-weight: 500;'>الرمز صالح لمدة 10 دقائق فقط. لا تشارك هذا الرمز مع أي شخص.</p>";
-        
-        return Wrap("تأكيد هويتك", content);
-    }
-
     public static string GetWelcomeTemplate(string name)
     {
         var content = $@"

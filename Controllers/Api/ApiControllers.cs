@@ -14,29 +14,17 @@ namespace Uis.Server.Controllers.Api;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IAuthService _auth; private readonly IOtpService _otp;
+    private readonly IAuthService _auth;
     private readonly ApplicationDbContext _db;
-    public AuthController(IAuthService auth, IOtpService otp, ApplicationDbContext db) { _auth = auth; _otp = otp; _db = db; }
+    public AuthController(IAuthService auth, ApplicationDbContext db) { _auth = auth; _db = db; }
 
     [HttpPost("login")] public async Task<IActionResult> Login(LoginDto dto) {
         var token = await _auth.LoginAsync(dto);
         if (token == null) return Unauthorized();
-        await _otp.GenerateOtpAsync(dto.Email);
-        return Ok(new { Token = token, Message = "OTP sent." });
-    }
-
-    [HttpPost("register")] public async Task<IActionResult> Register(RegisterDto dto) {
-        var success = await _auth.RegisterAsync(dto);
-        if (!success) return BadRequest("Registration failed.");
-        return Ok("User registered.");
-    }
-
-    [HttpPost("verify-otp")] public async Task<IActionResult> VerifyOtp(OtpVerifyDto dto) {
-        var success = await _otp.VerifyOtpAsync(dto.Email, dto.Code);
-        if (!success) return BadRequest("Invalid or expired OTP.");
         
         var user = await _db.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Email == dto.Email);
-        return Ok(new {
+        return Ok(new { 
+            Token = token, 
             Id = user?.Id,
             Name = user?.FullName,
             Email = user?.Email,
@@ -45,22 +33,24 @@ public class AuthController : ControllerBase
         });
     }
 
+    [HttpPost("register")] public async Task<IActionResult> Register(RegisterDto dto) {
+        var success = await _auth.RegisterAsync(dto);
+        if (!success) return BadRequest("Registration failed.");
+        return Ok("User registered.");
+    }
+
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] string email)
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
         if (user == null) return NotFound("User not found.");
 
-        await _otp.GenerateOtpAsync(email);
-        return Ok(new { Message = "OTP sent to your email." });
+        return Ok(new { Message = "You can now reset your password." });
     }
 
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {
-        var success = await _otp.VerifyOtpAsync(request.Email, request.Code);
-        if (!success) return BadRequest("Invalid or expired OTP.");
-
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
         if (user == null) return NotFound("User not found.");
 
@@ -74,7 +64,6 @@ public class AuthController : ControllerBase
 public class ResetPasswordRequest
 {
     public string Email { get; set; } = string.Empty;
-    public string Code { get; set; } = string.Empty;
     public string NewPassword { get; set; } = string.Empty;
 }
 

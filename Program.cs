@@ -86,7 +86,6 @@ builder.Services.AddAuthentication(options =>
 // Configure Services
 builder.Services.AddScoped<Uis.Server.Services.IEmailService, Uis.Server.Services.EmailService>();
 builder.Services.AddScoped<Uis.Server.Services.IAuthService, Uis.Server.Services.AuthService>();
-builder.Services.AddScoped<Uis.Server.Services.IOtpService, Uis.Server.Services.OtpService>();
 builder.Services.AddScoped<Uis.Server.Services.IJwtService, Uis.Server.Services.JwtService>();
 builder.Services.AddScoped<Uis.Server.Services.IUserService, Uis.Server.Services.UserService>();
 builder.Services.AddScoped<Uis.Server.Services.IKycService, Uis.Server.Services.KycService>();

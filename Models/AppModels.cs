@@ -57,15 +57,6 @@ public class RolePermission
     public Permission Permission { get; set; } = null!;
 }
 
-public class EmailOtp
-{
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public string Email { get; set; } = string.Empty;
-    public string Code { get; set; } = string.Empty;
-    public DateTime ExpiryDate { get; set; }
-    public bool IsUsed { get; set; }
-}
-
 public class KycRequest
 {
     public Guid Id { get; set; } = Guid.NewGuid();

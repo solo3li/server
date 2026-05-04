@@ -12,7 +12,6 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<Role> Roles { get; set; } = null!;
-    public DbSet<EmailOtp> EmailOtps { get; set; } = null!;
     public DbSet<KycRequest> KycRequests { get; set; } = null!;
     public DbSet<Category> Categories { get; set; } = null!;
     public DbSet<Service> Services { get; set; } = null!;

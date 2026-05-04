@@ -8,7 +8,8 @@ The UIS Backend is a hybrid application providing a **RESTful Web API** for the 
 - **Framework:** ASP.NET Core 10.0
 - **Database:** PostgreSQL (via Entity Framework Core 10)
 - **Real-time:** SignalR (for Chat and Notifications)
-- **Auth:** JWT with Email-based OTP verification (Real email sending via MailKit using fps60y@gmail.com)
+- **Auth:** JWT with direct Login (OTP verification removed).
+- **Real email sending:** via MailKit using fps60y@gmail.com for Welcome and Service emails.
 - **Infrastructure:** Docker & Docker Compose
 
 ## 📂 Architecture & Directory Structure
@@ -74,7 +75,7 @@ The project follows a standard ASP.NET Core MVC/Web API pattern:
 ## 📈 Current State
 - The ASP.NET Core backend is fully implemented and operational.
 - The **MVC Admin Panel** includes comprehensive views for User/Role Management, Orders, Services, Categories, KYC, Payments, and Tickets.
-- The **RESTful Web API** provides endpoints for Authentication, OTP verification, Orders, Services, Chats, and KYC submission.
+- The **RESTful Web API** provides endpoints for Authentication, Orders, Services, Chats, and KYC submission.
 - Real-time chatting and notifications are functional via SignalR (`ChatHub`).
 - The database is successfully seeded with test entities, sample orders, payments, and KYC records via `DbSeeder`.
 

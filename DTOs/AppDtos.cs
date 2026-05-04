@@ -12,11 +12,6 @@ public class RegisterDto {
     public string Role { get; set; } = "Student"; 
 }
 
-public class OtpVerifyDto { 
-    public string Email { get; set; } = string.Empty; 
-    public string Code { get; set; } = string.Empty; 
-}
-
 public class CreateOrderDto { 
     public Guid ServiceId { get; set; } 
     public decimal Price { get; set; } 

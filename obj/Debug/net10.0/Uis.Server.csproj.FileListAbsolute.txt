@@ -439,5 +439,12 @@ C:\Users\solo\Pictures\server\obj\Debug\net10.0\swae.build.ex.cache
 C:\Users\solo\Pictures\server\obj\Debug\net10.0\Uis.Server.csproj.Up2Date
 C:\Users\solo\Pictures\server\obj\Debug\net10.0\Uis.Server.genruntimeconfig.cache
 C:\Users\solo\Pictures\server\obj\Debug\net10.0\ref\Uis.Server.dll
-C:\Users\solo\Pictures\server\bin\Debug\net10.0\test_body.json
-C:\Users\solo\Pictures\server\bin\Debug\net10.0\test_report.json
+C:\Users\solo\Pictures\server\bin\Debug\net10.0\publish\web.config
+C:\Users\solo\Pictures\server\bin\Debug\net10.0\publish\appsettings.Development.json
+C:\Users\solo\Pictures\server\bin\Debug\net10.0\publish\appsettings.json
+C:\Users\solo\Pictures\server\bin\Debug\net10.0\publish\dotnet-tools.json
+C:\Users\solo\Pictures\server\bin\Debug\net10.0\publish\railway.json
+C:\Users\solo\Pictures\server\bin\Debug\net10.0\publish\ticket_resp.json
+C:\Users\solo\Pictures\server\bin\Debug\net10.0\publish\Uis.Server.deps.json
+C:\Users\solo\Pictures\server\bin\Debug\net10.0\publish\Uis.Server.runtimeconfig.json
+C:\Users\solo\Pictures\server\bin\Debug\net10.0\publish\Uis.Server.staticwebassets.endpoints.json
