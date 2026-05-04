@@ -439,3 +439,5 @@ C:\Users\solo\Pictures\server\obj\Debug\net10.0\swae.build.ex.cache
 C:\Users\solo\Pictures\server\obj\Debug\net10.0\Uis.Server.csproj.Up2Date
 C:\Users\solo\Pictures\server\obj\Debug\net10.0\Uis.Server.genruntimeconfig.cache
 C:\Users\solo\Pictures\server\obj\Debug\net10.0\ref\Uis.Server.dll
+C:\Users\solo\Pictures\server\bin\Debug\net10.0\test_body.json
+C:\Users\solo\Pictures\server\bin\Debug\net10.0\test_report.json
